@@ -1,0 +1,10 @@
+<h1>Task List</h1>
+<a href="/add">Add Task</a>
+<ul>
+    {% for task in tasks %}
+        <li>
+            <strong>{{ task.title }}</strong> - {{ task.deadline.strftime('%Y-%m-%d') }}
+            <a href="/delete/{{ task.id }}">Delete</a>
+        </li>
+    {% endfor %}
+</ul>
