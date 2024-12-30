@@ -1,10 +1,63 @@
-<h1>Task List</h1>
-<a href="/add">Add Task</a>
-<ul>
-    {% for task in tasks %}
-        <li>
-            <strong>{{ task.title }}</strong> - {{ task.deadline.strftime('%Y-%m-%d') }}
-            <a href="/delete/{{ task.id }}">Delete</a>
-        </li>
-    {% endfor %}
-</ul>
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="text-center mb-4">Task Manager</h1>
+<a href="/add" class="btn btn-primary mb-3">Add New Task</a>
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Title</th>
+                <th>Description</th>
+                <th>Deadline</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr>
+                <td>{{ task.id }}</td>
+                <td>{{ task.title }}</td>
+                <td>{{ task.description or "N/A" }}</td>
+                <td>
+                    <!-- Date formatting -->
+                    <div class="date-box">
+                        <span class="day">{{ task.formatted_deadline.split(' ')[0] }}</span>
+                        <span class="month">{{ task.formatted_deadline.split(' ')[1] }}</span>
+                        <span class="year">{{ task.formatted_deadline.split(' ')[2] }}</span>
+                    </div>
+                </td>
+                <td>
+                    <!-- Status display logic here -->
+                    <span class="badge 
+                        {% if task.status == 'Completed' %}
+                            bg-success
+                        {% elif task.status == 'Overdue' %}
+                            bg-danger
+                        {% elif task.status == 'Due Today' %}
+                            bg-warning
+                        {% else %}
+                            bg-primary
+                        {% endif %}
+                    ">
+                        {{ task.status }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('update_status', id=task.id) }}" class="btn btn-info btn-sm">
+                        {% if task.completed %}
+                            Mark as Pending
+                        {% else %}
+                            Mark as Completed
+                        {% endif %}
+                    </a>
+                    <a href="/delete/{{ task.id }}" class="btn btn-danger btn-sm">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %} 

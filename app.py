@@ -14,6 +14,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Disables SQLAlchemy modi
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
+from datetime import datetime
+
 
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -24,6 +26,25 @@ class Task(db.Model):
 
     def __repr__(self):
         return f"<Task {self.title}>"
+
+    @property
+    def status(self):
+        today = datetime.utcnow().date()  # Get the current date (ignoring time)
+        deadline_date = self.deadline.date()  # Get the date part of the deadline
+
+        if self.completed:
+            return "Completed"
+        elif deadline_date < today:
+            return "Overdue"
+        elif deadline_date == today:
+            return "Due Today"
+        else:
+            return "Pending"
+
+    @property
+    def formatted_deadline(self):
+        """Format deadline as '20 Oct 24'."""
+        return self.deadline.strftime('%d %b %y')  # Day, Month (short), Year (short)
 
 
 @app.route('/')
@@ -62,6 +83,21 @@ def delete_task(id):
         db.session.commit()  # Commit the deletion
     except Exception as e:
         print(f"Error deleting task: {e}")
+    return redirect(url_for('index'))
+
+
+@app.route('/update_status/<int:id>')
+def update_status(id):
+    # Get the task by its ID
+    task = Task.query.get_or_404(id)
+
+    # Toggle the completed status
+    task.completed = not task.completed
+
+    # Commit the change to the database
+    db.session.commit()
+
+    # Redirect back to the index page
     return redirect(url_for('index'))
 
 
