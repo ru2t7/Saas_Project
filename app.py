@@ -1,8 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from sqlalchemy import func
 from datetime import datetime
-
 app = Flask(__name__)
 
 # Configure the database URI for PostgreSQL
@@ -14,7 +14,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Disables SQLAlchemy modi
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-from datetime import datetime
 
 
 class Task(db.Model):
@@ -31,7 +30,6 @@ class Task(db.Model):
     def status(self):
         today = datetime.utcnow().date()  # Get the current date (ignoring time)
         deadline_date = self.deadline.date()  # Get the date part of the deadline
-
         if self.completed:
             return "Completed"
         elif deadline_date < today:
@@ -43,14 +41,46 @@ class Task(db.Model):
 
     @property
     def formatted_deadline(self):
-        """Format deadline as '20 Oct 24'."""
-        return self.deadline.strftime('%d %b %y')  # Day, Month (short), Year (short)
+        return self.deadline.strftime('%d %b %y')  # Format like "20 Oct 24"
+
 
 
 @app.route('/')
 def index():
-    tasks = Task.query.all()  # Get all tasks from the database
+    sort_by = request.args.get('sort_by', 'deadline')  # Default to 'deadline' if no sorting option is selected
+
+    # Get the current date for comparison
+    today = datetime.utcnow().date()
+
+    if sort_by == 'status':
+        # Sorting tasks based on status priority: Overdue > Today > Pending > Completed
+        tasks = Task.query.order_by(
+            db.case(
+                # Overdue: Tasks that have passed the deadline and are not completed
+                ((Task.deadline < today) & (Task.completed == False), 1),
+                # Due Today: Tasks whose deadline is today and not completed
+                ((Task.deadline == today) & (Task.completed == False), 2),
+                # Pending: Tasks that are not completed and are not overdue
+                (Task.completed == False, 3),
+                # Completed: Tasks that are marked as completed
+                (Task.completed == True, 4),
+                else_=5  # Default, catch-all for any tasks that don't match above
+            ).asc(),
+            Task.deadline.asc()  # Order by deadline within the same status
+        ).all()
+    elif sort_by == 'overdue':
+        # Sorting tasks that are overdue (tasks with a past deadline and not completed)
+        tasks = Task.query.filter(Task.deadline < datetime.utcnow(), Task.completed == False).order_by(Task.deadline).all()
+    elif sort_by == 'today':
+        # Sorting tasks that are due today
+        today = datetime.utcnow().date()
+        tasks = Task.query.filter(func.date(Task.deadline) == today, Task.completed == False).order_by(Task.deadline).all()
+    else:
+        # Default sorting by deadline (ascending)
+        tasks = Task.query.order_by(Task.deadline).all()
+
     return render_template('index.html', tasks=tasks)
+
 
 
 @app.route('/add', methods=['GET', 'POST'])

@@ -2,7 +2,21 @@
 
 {% block content %}
 <h1 class="text-center mb-4">Task Manager</h1>
+
+<!-- Sorting Dropdown -->
+<form method="GET" action="{{ url_for('index') }}">
+    <label for="sort_by">Sort By:</label>
+    <select name="sort_by" id="sort_by" onchange="this.form.submit()">
+        <option value="deadline" {% if request.args.get('sort_by') == 'deadline' %}selected{% endif %}>Deadline</option>
+        <option value="status" {% if request.args.get('sort_by') == 'status' %}selected{% endif %}>Status</option>
+        <option value="overdue" {% if request.args.get('sort_by') == 'overdue' %}selected{% endif %}>Overdue</option>
+        <option value="today" {% if request.args.get('sort_by') == 'today' %}selected{% endif %}>Today</option>
+    </select>
+</form>
+
+
 <a href="/add" class="btn btn-primary mb-3">Add New Task</a>
+
 <div class="table-responsive">
     <table class="table table-striped">
         <thead>
@@ -21,6 +35,7 @@
                 <td>{{ task.id }}</td>
                 <td>{{ task.title }}</td>
                 <td>{{ task.description or "N/A" }}</td>
+
                 <td>
                     <!-- Date formatting -->
                     <div class="date-box">
@@ -29,6 +44,7 @@
                         <span class="year">{{ task.formatted_deadline.split(' ')[2] }}</span>
                     </div>
                 </td>
+
                 <td>
                     <!-- Status display logic here -->
                     <span class="badge 
@@ -45,6 +61,7 @@
                         {{ task.status }}
                     </span>
                 </td>
+
                 <td>
                     <a href="{{ url_for('update_status', id=task.id) }}" class="btn btn-info btn-sm">
                         {% if task.completed %}
