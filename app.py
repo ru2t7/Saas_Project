@@ -3,7 +3,14 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sqlalchemy import func
 from datetime import datetime
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import LoginManager
+from flask import flash, redirect
+from flask_login import login_user, logout_user, login_required
+import os
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'fallback_secret_key')
 
 # Configure the database URI for PostgreSQL
 app.config[
@@ -13,6 +20,18 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # Disables SQLAlchemy modi
 # Initialize database and migration tools
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(150), unique=True, nullable=False)
+    password_hash = db.Column(db.String(200), nullable=False)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
 
 
 
@@ -43,6 +62,36 @@ class Task(db.Model):
     def formatted_deadline(self):
         return self.deadline.strftime('%d %b %y')  # Format like "20 Oct 24"
 
+
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User.query.filter_by(username=username).first()
+        if user and user.check_password(password):
+            login_user(user)
+            flash('Logged in successfully.')
+            return redirect(url_for('index'))
+        else:
+            flash('Invalid username or password.')
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Logged out successfully.')
+    return redirect(url_for('login'))
 
 @app.route('/')
 def index():
@@ -97,6 +146,7 @@ def index():
 
 
 @app.route('/add', methods=['GET', 'POST'])
+@login_required
 def add_task():
     if request.method == 'POST':
         title = request.form['title']
@@ -119,6 +169,7 @@ def add_task():
 
 
 @app.route('/delete/<int:id>')
+@login_required
 def delete_task(id):
     task = Task.query.get_or_404(id)
     try:
@@ -130,6 +181,7 @@ def delete_task(id):
 
 
 @app.route('/update_status/<int:id>')
+@login_required
 def update_status(id):
     # Get the task by its ID
     task = Task.query.get_or_404(id)
@@ -142,6 +194,22 @@ def update_status(id):
 
     # Redirect back to the index page
     return redirect(url_for('index'))
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        if User.query.filter_by(username=username).first():
+            flash('Username already exists.')
+            return redirect(url_for('register'))
+        new_user = User(username=username)
+        new_user.set_password(password)
+        db.session.add(new_user)
+        db.session.commit()
+        flash('User registered successfully.')
+        return redirect(url_for('login'))
+    return render_template('register.html')
 
 
 if __name__ == "__main__":
