@@ -4,15 +4,51 @@
 <h1 class="text-center mb-4">Task Manager</h1>
 
 <!-- Sorting Dropdown -->
-<form method="GET" action="{{ url_for('index') }}">
-    <label for="sort_by">Sort By:</label>
-    <select name="sort_by" id="sort_by" onchange="this.form.submit()">
-        <option value="deadline" {% if request.args.get('sort_by') == 'deadline' %}selected{% endif %}>Deadline</option>
-        <option value="status" {% if request.args.get('sort_by') == 'status' %}selected{% endif %}>Status</option>
-        <option value="overdue" {% if request.args.get('sort_by') == 'overdue' %}selected{% endif %}>Overdue</option>
-        <option value="today" {% if request.args.get('sort_by') == 'today' %}selected{% endif %}>Today</option>
-    </select>
+<form method="GET" action="{{ url_for('index') }}" id="sortForm">
+    <div class="form-group">
+        <label for="sort_by">Sort Tasks By:</label>
+        <div class="input-group">
+            <!-- Sorting dropdown -->
+            <select name="sort_by" id="sort_by" class="form-control" onchange="this.form.submit()">
+                <option value="deadline" {% if request.args.get('sort_by') == 'deadline' %}selected{% endif %}>Deadline</option>
+                <option value="status" {% if request.args.get('sort_by') == 'status' %}selected{% endif %}>Status</option>
+                <option value="overdue" {% if request.args.get('sort_by') == 'overdue' %}selected{% endif %}>Overdue</option>
+                <option value="today" {% if request.args.get('sort_by') == 'today' %}selected{% endif %}>Today</option>
+            </select>
+            
+            <div class="input-group-append">
+                <!-- Hidden input to toggle sort direction -->
+                <input type="hidden" name="sort_direction" value="{{ 'asc' if sort_direction == 'desc' else 'desc' }}">
+
+                <!-- Example button for sorting -->
+                <button type="submit" class="btn btn-outline-primary sort-button">
+                    <i class="bi {{ 'bi-arrow-up' if sort_direction == 'asc' else 'bi-arrow-down' }}"></i>
+                </button>
+            </div>
+        </div>
+    </div>
 </form>
+
+
+
+<script>
+    <script>
+        document.querySelector('.sort-button').addEventListener('click', function() {
+            var icon = this.querySelector('i');
+            
+            // Toggle the icon class to switch between ascending and descending direction
+            if (icon.classList.contains('bi-arrow-down-up')) {
+                icon.classList.remove('bi-arrow-down-up');
+                icon.classList.add('bi-arrow-up-down'); // Add a different icon for descending
+            } else {
+                icon.classList.remove('bi-arrow-up-down');
+                icon.classList.add('bi-arrow-down-up'); // Reset back to ascending
+            }
+        });
+    </script>
+</script>
+
+
 
 
 <a href="/add" class="btn btn-primary mb-3">Add New Task</a>

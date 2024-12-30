@@ -44,43 +44,56 @@ class Task(db.Model):
         return self.deadline.strftime('%d %b %y')  # Format like "20 Oct 24"
 
 
-
 @app.route('/')
 def index():
     sort_by = request.args.get('sort_by', 'deadline')  # Default to 'deadline' if no sorting option is selected
+    sort_direction = request.args.get('sort_direction', 'asc')  # Default direction to ascending if not specified
 
     # Get the current date for comparison
     today = datetime.utcnow().date()
 
     if sort_by == 'status':
         # Sorting tasks based on status priority: Overdue > Today > Pending > Completed
-        tasks = Task.query.order_by(
-            db.case(
-                # Overdue: Tasks that have passed the deadline and are not completed
-                ((Task.deadline < today) & (Task.completed == False), 1),
-                # Due Today: Tasks whose deadline is today and not completed
-                ((Task.deadline == today) & (Task.completed == False), 2),
-                # Pending: Tasks that are not completed and are not overdue
-                (Task.completed == False, 3),
-                # Completed: Tasks that are marked as completed
-                (Task.completed == True, 4),
-                else_=5  # Default, catch-all for any tasks that don't match above
-            ).asc(),
-            Task.deadline.asc()  # Order by deadline within the same status
-        ).all()
+        case_condition = db.case(
+            # Overdue: Tasks that have passed the deadline and are not completed
+            ((Task.deadline < today) & (Task.completed == False), 1),
+            # Due Today: Tasks whose deadline is today and not completed
+            ((Task.deadline == today) & (Task.completed == False), 2),
+            # Pending: Tasks that are not completed and are not overdue
+            (Task.completed == False, 3),
+            # Completed: Tasks that are marked as completed
+            (Task.completed == True, 4),
+            else_=5  # Default, catch-all for any tasks that don't match above
+        )
+        # Handle sorting direction (ascending or descending)
+        if sort_direction == 'asc':
+            tasks = Task.query.order_by(case_condition.asc(), Task.deadline.asc()).all()
+        else:
+            tasks = Task.query.order_by(case_condition.desc(), Task.deadline.desc()).all()
+
     elif sort_by == 'overdue':
         # Sorting tasks that are overdue (tasks with a past deadline and not completed)
-        tasks = Task.query.filter(Task.deadline < datetime.utcnow(), Task.completed == False).order_by(Task.deadline).all()
+        if sort_direction == 'asc':
+            tasks = Task.query.filter(Task.deadline < datetime.utcnow(), Task.completed == False).order_by(Task.deadline.asc()).all()
+        else:
+            tasks = Task.query.filter(Task.deadline < datetime.utcnow(), Task.completed == False).order_by(Task.deadline.desc()).all()
+
     elif sort_by == 'today':
         # Sorting tasks that are due today
         today = datetime.utcnow().date()
-        tasks = Task.query.filter(func.date(Task.deadline) == today, Task.completed == False).order_by(Task.deadline).all()
+        if sort_direction == 'asc':
+            tasks = Task.query.filter(func.date(Task.deadline) == today, Task.completed == False).order_by(Task.deadline.asc()).all()
+        else:
+            tasks = Task.query.filter(func.date(Task.deadline) == today, Task.completed == False).order_by(Task.deadline.desc()).all()
+
     else:
-        # Default sorting by deadline (ascending)
-        tasks = Task.query.order_by(Task.deadline).all()
+        # Default sorting by deadline (ascending or descending based on direction)
+        if sort_direction == 'asc':
+            tasks = Task.query.order_by(Task.deadline.asc()).all()
+        else:
+            tasks = Task.query.order_by(Task.deadline.desc()).all()
 
-    return render_template('index.html', tasks=tasks)
-
+    return render_template('index.html', tasks=tasks, sort_by=sort_by, sort_direction=sort_direction)
 
 
 @app.route('/add', methods=['GET', 'POST'])
