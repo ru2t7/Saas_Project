@@ -1,20 +1,38 @@
-{% extends 'base.html' %}
+{% extends 'base.html' %} <!-- Extends the base layout -->
 
 {% block content %}
 <div class="container mt-5">
-  <h2 class="mb-4 text-center">Register</h2>
+    <h2 class="mb-4 text-center">Register</h2> <!-- Page Title -->
+
+    <!-- Centered Registration Form -->
     <div class="row justify-content-center">
         <div class="col-md-6">
-            <form method="POST" action="{{ url_for('register') }}">
+            <form method="POST" action="{{ url_for('register') }}"> <!-- Form Submission -->
+
+                <!-- Username Field -->
                 <div class="mb-3">
                     <label for="username" class="form-label">Username</label>
-                    <input type="text" class="form-control" id="username" name="username" required>
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="username"
+                        name="username"
+                        required> <!-- Ensures username input is not empty -->
                 </div>
+
+                <!-- Password Field -->
                 <div class="mb-3">
                     <label for="password" class="form-label">Password</label>
-                    <input type="password" class="form-control" id="password" name="password" required>
+                    <input
+                        type="password"
+                        class="form-control"
+                        id="password"
+                        name="password"
+                        required> <!-- Ensures password input is not empty -->
                 </div>
-                <button type="submit" class="btn btn-primary w-100">Register</button>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary w-100">Register</button> <!-- Full-width button -->
             </form>
         </div>
     </div>

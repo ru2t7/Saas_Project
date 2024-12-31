@@ -21,32 +21,32 @@
                     <!-- The 'X' button is already part of Bootstrap's modal by default -->
                 </div>
                 <div class="modal-body" id="flashMessageContent">
-                    <!-- Flash message content will be inserted here -->
+                    <!-- Flash message content will be inserted dynamically here -->
                 </div>
-                <!-- No footer close button needed, we will rely on the default close button (X) in the top-right corner -->
+                <!-- Footer omitted for simplicity, modal relies on the default close button -->
             </div>
         </div>
     </div>
 
-    <!-- Page Content -->
-     <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">Task Manager</a>
+            <a class="navbar-brand" href="#">Task Manager</a> <!-- Brand name -->
             <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto"> <!-- Right-aligned navigation items -->
                     {% if current_user.is_authenticated %}
-                        <!-- Display Logout button only if the user is authenticated -->
+                        <!-- Show Logout button if user is logged in -->
                         <li class="nav-item">
                             <form action="{{ url_for('logout') }}" method="POST">
-    				<button type="submit" class="btn btn-danger">Logout</button>
-			    </form>
+                                <button type="submit" class="btn btn-danger">Logout</button>
+                            </form>
                         </li>
                     {% else %}
-                        <!-- Display Login button only if the user is not authenticated -->
+                        <!-- Show Login button if user is not logged in -->
                         <li class="nav-item">
                             <a href="{{ url_for('login') }}" class="btn btn-primary">Login</a>
                         </li>
-                        <!-- Display Register button only if the user is not authenticated -->
+                        <!-- Show Register button if user is not logged in -->
                         <li class="nav-item">
                             <a href="{{ url_for('register') }}" class="btn btn-link">Register</a>
                         </li>
@@ -56,17 +56,19 @@
         </div>
     </nav>
 
+    <!-- Content Block -->
     {% block content %}
     {% endblock %}
 
-    <!-- Bootstrap Bundle with Popper -->
+    <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- Flash Messages Handling -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             <script>
                 // Get the flash message content (first message)
-                const flashMessageContent = '{{ messages[0][1] }}'; 
+                const flashMessageContent = '{{ messages[0][1] }}';
                 const flashMessageModal = new bootstrap.Modal(document.getElementById('flashMessageModal'));
 
                 // Set the content of the modal
@@ -77,13 +79,6 @@
             </script>
         {% endif %}
     {% endwith %}
- <!--
-    <script>
-    window.addEventListener("beforeunload", function(event) {
-        // Log the user out by sending a request to the logout route
-        fetch('/logout', {method: 'POST'});
-    });
-    </script>
--->
-
 </body>
+
+</html>

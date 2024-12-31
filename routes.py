@@ -1,9 +1,9 @@
 from flask import Flask, render_template, redirect, request, url_for, flash, session
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy import func
-
 from models import db, User, Task
 from datetime import datetime
+
 
 def register_routes(app):
     @app.route('/dashboard')
@@ -66,34 +66,38 @@ def register_routes(app):
         if current_user.is_authenticated:
             # If the user is already logged in, redirect them to the dashboard
             return redirect(url_for('index'))  # Change 'dashboard' to the name of your dashboard route
+
         if request.method == 'POST':
             username = request.form['username']
             password = request.form['password']
             user = User.query.filter_by(username=username).first()
+
             if user and user.check_password(password):
                 login_user(user)
                 flash('Logged in successfully.')
                 return redirect(url_for('index'))
             else:
                 flash('Invalid username or password.')
+
         return render_template('login.html')
-
-
 
     @app.route('/register', methods=['GET', 'POST'])
     def register():
         if request.method == 'POST':
             username = request.form['username']
             password = request.form['password']
+
             if User.query.filter_by(username=username).first():
                 flash('Username already exists.')
                 return redirect(url_for('register'))
+
             new_user = User(username=username)
             new_user.set_password(password)
             db.session.add(new_user)
             db.session.commit()
             flash('User registered successfully.')
             return redirect(url_for('login'))
+
         return render_template('register.html')
 
     @app.route('/add', methods=['GET', 'POST'])
@@ -111,6 +115,7 @@ def register_routes(app):
             db.session.add(new_task)
             db.session.commit()
             return redirect(url_for('index'))
+
         return render_template('add_task.html')
 
     @app.route('/delete/<int:id>')
