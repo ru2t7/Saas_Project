@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, request, url_for, flash, session
 from flask_login import login_user, logout_user, login_required, current_user
 from sqlalchemy import func
-from models import db, User, Task
+from model import db, User, Task
 from datetime import datetime
 
 

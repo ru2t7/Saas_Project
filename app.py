@@ -35,7 +35,7 @@ login_manager.login_view = 'login'  # Redirect unauthorized users to the login p
 # Define user loader for Flask-Login
 @login_manager.user_loader
 def load_user(user_id):
-    from models import User  # Import here to avoid circular import issues
+    from model import User  # Import here to avoid circular import issues
     return User.query.get(int(user_id))  # Load user by ID from the database
 
 # Configure session management
@@ -55,8 +55,8 @@ def logout():
 
 # Register models and routes
 with app.app_context():
-    from models import User, Task  # Import models for database creation
-    from routes import register_routes  # Import route registration function
+    from model import User, Task  # Import models for database creation
+    from controller import register_routes  # Import route registration function
     db.create_all()  # Ensure database tables are created
     register_routes(app)  # Register application routes
 
